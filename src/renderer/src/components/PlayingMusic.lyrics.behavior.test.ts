@@ -1773,6 +1773,20 @@ app.whenReady().then(async () => {
       if (diagnostics.viewport[0] !== 1920 || diagnostics.viewport[1] !== 1080 || !diagnostics.centered || !diagnostics.coverFits || !diagnostics.coverCentered || !diagnostics.timeAtEdge) {
         throw new Error('custom lyric geometry failed: ' + JSON.stringify({ appearance, ...diagnostics }))
       }
+      // Regression for #200: the standard stage used to cap its own width. It read
+      // --te-lyric-max-width / --te-lyric-cover-gap, but those are set on the .layout
+      // child (which does not inherit upward), so the stage always fell back to the
+      // 820px default and locked at 1292px, clipping the layout right after ~1000px
+      // even though the layout rule asked for more. With lyricsMaxWidth 1200 the
+      // layout's own width is 360px + gap + 1200px = 1560px (gap >= 0), so the
+      // stage no longer capping it means the layout must reach at least 1560px;
+      // the old stage cap held it at 1292px.
+      if (appearance.lyricsMaxWidth === 1200) {
+        const layoutWidth = diagnostics.layout[1] - diagnostics.layout[0]
+        if (layoutWidth < 1560) {
+          throw new Error('stage cap regression: layout width ' + layoutWidth + ' did not reach the 1560px the layout asks for at lyricsMaxWidth 1200 (old stage cap held it at 1292px): ' + JSON.stringify({ appearance, ...diagnostics }))
+        }
+      }
     }
     await window.webContents.executeJavaScript('window.setPlayingMusicLayoutFixture(true)')
     if (visualDir) {

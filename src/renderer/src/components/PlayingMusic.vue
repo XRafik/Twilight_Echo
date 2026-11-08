@@ -1428,16 +1428,14 @@ html[data-te-motion='off'] .backdrop-fluid::before {
 /* The standard layout sizes the lyric column from --te-lyric-max-width, so the
    surrounding .stage must be allowed to grow with it. Otherwise the stage's
    1560px cap clips the layout and the "lyrics max width" slider does nothing
-   past ~1000px on wide screens (issue #200). Mirror the layout's own width and
-   add the stage's 72px horizontal padding (36px each side) so the layout fits. */
-:global(html[data-te-player-layout='standard'] .playing-music .stage) {
-  width: min(
-    100%,
-    calc(
-      360px + var(--te-lyric-cover-gap, var(--te-playback-stage-spread, 40px)) +
-        var(--te-lyric-max-width, var(--te-playback-stage-span, 820px)) + 72px
-    )
-  );
+   past ~1000px on wide screens (issue #200). The layout already computes its
+   own width and centers itself with margin-inline: auto, so the stage only
+   needs to stop capping it. The custom properties are set on the .layout child
+   (which does not inherit upward), so the stage cannot read them; and
+   .stage--visualizer must keep its 100vw, which this rule's higher specificity
+   would otherwise override, hence the :not(.stage--visualizer) guard. */
+:global(html[data-te-player-layout='standard'] .playing-music .stage:not(.stage--visualizer)) {
+  width: 100%;
 }
 
 :global(html[data-te-player-layout='standard'] .playing-music .layout:not(.layout--single)) {
